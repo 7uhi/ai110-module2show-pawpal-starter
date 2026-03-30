@@ -3,10 +3,20 @@
 ## 1. System Design
 
 **a. Initial design**
-
+- Three core actions a user should be able to perform
+  1. Enter owner & pet info
+  2. Add care tasks
+  3. Generate & view a daily schedule
 - Briefly describe your initial UML design.
+Owner  ──has──>  Pet  ──has many──>  Task
+Schedule  ──uses──>  Owner
+Schedule  ──uses──>  Pet
+Schedule.generate()  ──calls──>  Claude API
 - What classes did you include, and what responsibilities did you assign to each?
-
+Task: title, duration, priority, is_completed, mark_complete()
+Owner: name, mainly a data holder. Can add add_pet() if supporting multiple pets.
+Pet: name, species, tasks, add_task()
+Schedule: owner, pet, plan
 **b. Design changes**
 
 - Did your design change during implementation?
