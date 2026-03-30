@@ -40,6 +40,8 @@ Any code that calls pet.total_duration() before implementation will silently get
 
 No way to remove or edit tasks
 Pet only has add_task. If a user adds a task by mistake in the UI, there's no remove_task(index) or clear_tasks(). This will surface as a UX issue once connected to Streamlit.
+
+Implemented all of these changes for the reasons listed above.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -47,13 +49,17 @@ Pet only has add_task. If a user adds a task by mistake in the UI, there's no re
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+Priority, scheduled time, completion status, recurrence frequency, time conflicts
 - How did you decide which constraints mattered most?
-
+Priority ranked first because some tasks are non-negotiable on safety grounds — a medication dose or vet appointment can't be bumped, whereas an afternoon nap or grooming session can. Time slotting ranked second because priority alone doesn't produce an actionable schedule. Two HIGH tasks still need to know which comes first in the day. sort_by_time() answers "when," while sort_tasks() answers "what matters most" — they're complementary rather than competing.
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+Right now Priority.value is a human-readable string ("high", "medium", "low"). Changing it to an integer (0, 1, 2) means the enum's stored value no longer describes itself — you lose that freebie display string.
 - Why is that tradeoff reasonable for this scenario?
+The string values were a convenience that leaked into the sort logic, forcing sort_tasks() to maintain a separate translation dict to make them sortable. Integers are what the sort actually needs — so the enum's value should just be that directly.
 
+In a larger system where Priority.value was serialized to a database, sent over an API, or matched against user input in many places, the cost of changing it would be much higher. Here the surface area is small (two display lines, one coercion line), so the one-time fix is cheap and the long-term design is cleaner.
 ---
 
 ## 3. AI Collaboration
