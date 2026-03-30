@@ -21,7 +21,25 @@ Schedule: owner, pet, plan
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+Missing Relationships
+Owner has no link to Pet
+The UML shows Owner owns Pet, but there's no pets list on Owner and no way to navigate from an owner to their pet(s). Schedule holds both separately, so the relationship only exists implicitly inside Schedule. This is fine for a single-pet app, but if you ever support multiple pets, you'd need Owner.pets: List[Pet].
 
+Schedule has no link back to individual Task results
+plan_text is a raw string from Claude. Once generated, you can't query "which tasks are scheduled?" or "what time is task X?" programmatically. The schedule output is opaque — fine for display, but a bottleneck if you want to mark tasks complete or filter the plan.
+
+Potential Logic Bottlenecks
+generate() does everything in one call
+Building the prompt, calling the API, parsing the response, and storing results are all in one method. If the API call fails mid-way, you lose context on what was sent. Consider separating _build_prompt() as a helper — makes it testable without hitting the API.
+
+priority is an unvalidated string
+Nothing prevents Task(priority="urgent") or Task(priority="HIGH"). When Claude's prompt lists tasks by priority, inconsistent casing or values could confuse the output. An Enum or validation in __post_init__ would close this gap.
+
+total_duration() returns None right now (stub returns pass)
+Any code that calls pet.total_duration() before implementation will silently get None instead of an int. Low risk now, but worth flagging for when you wire it into the prompt.
+
+No way to remove or edit tasks
+Pet only has add_task. If a user adds a task by mistake in the UI, there's no remove_task(index) or clear_tasks(). This will surface as a UX issue once connected to Streamlit.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
