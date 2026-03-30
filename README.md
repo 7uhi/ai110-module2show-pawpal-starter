@@ -22,6 +22,33 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Features
+
+### Task management
+- **Priority levels** — each task is assigned a `HIGH`, `MEDIUM`, or `LOW` priority using an enum, ensuring consistent comparisons across the system.
+- **Task recurrence** — marking a task complete automatically generates the next occurrence: daily tasks recur the next day, weekly tasks recur 7 days later, and as-needed tasks do not recur.
+- **Completion tracking** — tasks carry an `is_completed` flag so pending and finished work can always be distinguished.
+
+### Scheduling algorithms
+- **Sort by priority** — `sort_tasks()` orders all tasks high → medium → low so the most critical care always appears first.
+- **Sort by time** — `sort_by_time()` orders tasks by their scheduled time (earliest first), with unscheduled tasks placed at the end.
+- **Filter by priority** — `get_tasks_by_priority()` returns only tasks matching a specific priority level, useful for focusing on urgent care.
+- **Filter by status** — `get_incomplete_tasks()` and `get_tasks_by_pet_and_status()` let you query pending or completed tasks per pet.
+
+### Conflict detection
+- **Time-slot conflict warnings** — `detect_conflicts()` scans all incomplete tasks and flags any two that share the same scheduled time, reporting the exact time slot and the names of the conflicting tasks. Completed tasks are excluded so resolved work never triggers false alarms.
+
+### AI schedule generation
+- **Claude-powered daily plan** — `generate()` sends the owner's pets and tasks to the Claude API, which produces a prioritized daily schedule starting at 7 AM along with a plain-language explanation of the ordering decisions.
+
+### Streamlit UI
+- **Live metrics** — total task count, total duration in minutes, and pending task count update automatically as tasks are added.
+- **Conflict banners** — scheduling conflicts surface as prominent error cards with per-conflict detail and a tip for resolving the overlap, so a pet owner immediately knows what to fix and how.
+- **Status indicators** — the task table uses color-coded priority badges (🔴 High, 🟡 Medium, 🟢 Low) and status icons (✅ Done, ⏳ Pending) for fast visual scanning.
+
+## 📸 Demo
+<a href="pawpal_demo.png" target="_blank"><img src='/pawpal_demo.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
 ## Getting started
 
 ### Setup

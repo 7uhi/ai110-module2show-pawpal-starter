@@ -66,21 +66,76 @@ if st.button("Add task"):
     new_task = Task(title=task_title, duration_minutes=int(duration), priority=priority)
     st.session_state.pet.add_task(new_task)
 
+PRIORITY_LABEL = {Priority.HIGH: "🔴 High", Priority.MEDIUM: "🟡 Medium", Priority.LOW: "🟢 Low"}
+STATUS_LABEL   = {True: "✅ Done", False: "⏳ Pending"}
+
 if st.session_state.pet.tasks:
-    st.write("Current tasks:")
-    st.table([
-        {"title": t.title, "duration_minutes": t.duration_minutes, "priority": t.priority.name.lower()}
-        for t in st.session_state.pet.tasks
-    ])
+    scheduler = Scheduler(owner=st.session_state.owner)
+    sorted_tasks = scheduler.sort_tasks()
+
+    # Summary metrics
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total tasks", len(sorted_tasks))
+    m2.metric("Total duration", f"{st.session_state.pet.total_duration()} min")
+    m3.metric("Pending", len(scheduler.get_incomplete_tasks()))
+
+    # Sorted task table
+    st.caption("Tasks ordered high → medium → low priority")
+    st.dataframe(
+        [
+            {
+                "Task": t.title,
+                "Duration (min)": t.duration_minutes,
+                "Priority": PRIORITY_LABEL[t.priority],
+                "Frequency": t.frequency,
+                "Status": STATUS_LABEL[t.is_completed],
+            }
+            for t in sorted_tasks
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # Conflict feedback
+    conflicts = scheduler.detect_conflicts()
+    if conflicts:
+        st.error(
+            f"**{len(conflicts)} scheduling conflict(s) found.** "
+            "Two or more tasks are assigned to the same time slot. "
+            "Resolve these before generating your schedule."
+        )
+        for warning in conflicts:
+            with st.container(border=True):
+                st.warning(warning)
+                st.caption("Tip: change one task's scheduled time to remove this overlap.")
+    else:
+        st.success("No scheduling conflicts — all tasks are ready to schedule!")
 else:
     st.info("No tasks yet. Add one above.")
 
 st.divider()
 
 st.subheader("Build Schedule")
-st.caption("This button should call your scheduling logic once you implement it.")
+st.caption("Generates a prioritized daily care plan for your pet using AI.")
 
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner=st.session_state.owner)
-    result = scheduler.generate()
-    st.markdown(result)
+
+    conflicts = scheduler.detect_conflicts()
+    if conflicts:
+        st.error(
+            f"**{len(conflicts)} conflict(s) detected.** "
+            "Your schedule may have overlapping tasks."
+        )
+        for warning in conflicts:
+            with st.container(border=True):
+                st.warning(warning)
+
+    with st.spinner("Building your pet care schedule..."):
+        result = scheduler.generate()
+
+    if result.startswith("Error"):
+        st.error(result)
+    else:
+        st.success("Schedule ready!")
+        st.markdown(result)
